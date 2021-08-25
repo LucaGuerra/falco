@@ -128,6 +128,8 @@ static void usage()
 	   " -l <rule>                     Show the name and description of the rule with name <rule> and exit.\n"
 	   " --list [<source>]             List all defined fields. If <source> is provided, only list those fields for\n"
 	   "                               the source <source>. Current values for <source> are \"syscall\", \"k8s_audit\"\n"
+	   " --list-events                 TODO description\n"
+	   " --markdown                    When used with --list and --list-events enables markdown output.\n"
 #ifndef MINIMAL_BUILD
 	   " -m <url[,marathon_url]>, --mesos-api <url[,marathon_url]>\n"
 	   "                               Enable Mesos support by connecting to the API server\n"
@@ -421,7 +423,7 @@ static void print_all_ignored_events(sinsp *inspector)
 	printf("\n");
 }
 
-static void list_source_fields(falco_engine *engine, bool verbose, bool names_only, std::string &source)
+static void list_source_fields(falco_engine *engine, bool markdown, bool verbose, bool names_only, std::string &source)
 {
 	if(source.size() > 0 &&
 	   !(source == "syscall" || source == "k8s_audit"))
@@ -430,11 +432,11 @@ static void list_source_fields(falco_engine *engine, bool verbose, bool names_on
 	}
 	if(source == "" || source == "syscall")
 	{
-		list_fields(verbose, false, names_only);
+		list_fields(verbose, markdown, names_only);
 	}
 	if(source == "" || source == "k8s_audit")
 	{
-		engine->list_fields(names_only);
+		engine->list_fields(markdown, names_only);
 	}
 }
 
@@ -478,6 +480,8 @@ int falco_init(int argc, char **argv)
 	bool print_ignored_events = false;
 	bool list_flds = false;
 	string list_flds_source = "";
+	bool list_evts = false;
+	bool markdown = false;
 	bool print_support = false;
 	string cri_socket_path;
 	bool cri_async = true;
@@ -518,6 +522,8 @@ int falco_init(int argc, char **argv)
 			{"k8s-api-cert", required_argument, 0, 'K'},
 			{"k8s-api", required_argument, 0, 'k'},
 			{"list", optional_argument, 0},
+			{"list-events", no_argument, 0, 0},
+			{"markdown", no_argument, 0, 0},
 			{"mesos-api", required_argument, 0, 'm'},
 			{"option", required_argument, 0, 'o'},
 			{"pidfile", required_argument, 0, 'P'},
@@ -701,6 +707,14 @@ int falco_init(int argc, char **argv)
 						list_flds_source = optarg;
 					}
 				}
+				else if (string(long_options[long_index].name) == "markdown")
+				{
+					markdown = true;
+				}
+				else if (string(long_options[long_index].name) == "list-events")
+				{
+					list_evts = true;
+				}
 				else if (string(long_options[long_index].name) == "stats-interval")
 				{
 					stats_interval = atoi(optarg);
@@ -761,13 +775,20 @@ int falco_init(int argc, char **argv)
 			return EXIT_SUCCESS;
 		}
 
+		if(list_evts)
+		{
+			list_events(inspector, markdown);
+			delete(inspector);
+			return EXIT_SUCCESS;
+		}
+
 		engine = new falco_engine(true, alternate_lua_dir);
 		engine->set_inspector(inspector);
 		engine->set_extra(output_format, replace_container_info);
 
 		if(list_flds)
 		{
-			list_source_fields(engine, verbose, names_only, list_flds_source);
+			list_source_fields(engine, markdown, verbose, names_only, list_flds_source);
 			return EXIT_SUCCESS;
 		}
 
@@ -1249,7 +1270,7 @@ int falco_init(int argc, char **argv)
 					k8s_api_cert = new string(k8s_cert_env);
 				}
 			}
-			inspector->init_k8s_client(k8s_api, k8s_api_cert, verbose);
+			inspector->init_k8s_client(k8s_api, k8s_api_cert, nullptr, verbose);
 			k8s_api = 0;
 			k8s_api_cert = 0;
 		}
@@ -1265,7 +1286,7 @@ int falco_init(int argc, char **argv)
 					}
 				}
 				k8s_api = new string(k8s_api_env);
-				inspector->init_k8s_client(k8s_api, k8s_api_cert, verbose);
+				inspector->init_k8s_client(k8s_api, k8s_api_cert, nullptr, verbose);
 			}
 			else
 			{

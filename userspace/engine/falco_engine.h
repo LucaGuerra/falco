@@ -57,7 +57,7 @@ public:
 	static uint32_t engine_version();
 
 	// Print to stdout (using printf) a description of each field supported by this engine.
-	void list_fields(bool names_only=false);
+	void list_fields(bool markdown=false, bool names_only=false);
 
 	//
 	// Load rules either directly or from a filename.

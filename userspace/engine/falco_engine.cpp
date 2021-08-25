@@ -85,41 +85,39 @@ uint32_t falco_engine::engine_version()
 
 #define CONSOLE_LINE_LEN 79
 
-void falco_engine::list_fields(bool names_only)
+void falco_engine::list_fields(bool markdown, bool names_only)
 {
 	for(auto &chk_field : json_factory().get_fields())
 	{
 		if(!names_only)
 		{
-			printf("\n----------------------\n");
-			printf("Field Class: %s (%s)\n\n", chk_field.m_name.c_str(), chk_field.m_desc.c_str());
-			if(chk_field.m_class_info != "")
+			if(markdown)
 			{
-				std::string str = falco::utils::wrap_text(chk_field.m_class_info, 0, 0, CONSOLE_LINE_LEN);
-				printf("%s\n", str.c_str());
+				printf("\n## Field Class: %s\n\n", chk_field.m_name.c_str());
+				printf("%s\n\n", chk_field.m_desc.c_str());
+				if(chk_field.m_class_info != "")
+				{
+					printf("%s\n\n", chk_field.m_class_info.c_str());
+				}
+				printf("Name | Description\n");
+				printf(":----|:-----------\n");
+			} else {
+				printf("\n----------------------\n");
+				printf("Field Class: %s (%s)\n\n", chk_field.m_name.c_str(), chk_field.m_desc.c_str());
+				if(chk_field.m_class_info != "")
+				{
+					std::string str = falco::utils::wrap_text(chk_field.m_class_info, 0, 0, CONSOLE_LINE_LEN);
+					printf("%s\n", str.c_str());
+				}
 			}
 		}
 
 		for(auto &field : chk_field.m_fields)
 		{
-			printf("%s", field.m_name.c_str());
-
 			if(names_only)
 			{
-				printf("\n");
+				printf("%s\n", field.m_name.c_str());
 				continue;
-			}
-			uint32_t namelen = field.m_name.size();
-
-			if(namelen >= DESCRIPTION_TEXT_START)
-			{
-				printf("\n");
-				namelen = 0;
-			}
-
-			for(uint32_t l = 0; l < DESCRIPTION_TEXT_START - namelen; l++)
-			{
-				printf(" ");
 			}
 
 			std::string desc = field.m_desc;
@@ -138,8 +136,27 @@ void falco_engine::list_fields(bool names_only)
 				break;
 			};
 
-			std::string str = falco::utils::wrap_text(desc, namelen, DESCRIPTION_TEXT_START, CONSOLE_LINE_LEN);
-			printf("%s\n", str.c_str());
+			if(markdown)
+			{
+				printf("`%s` | %s\n", field.m_name.c_str(), desc.c_str());
+			} else {
+				printf("%s", field.m_name.c_str());
+				uint32_t namelen = field.m_name.size();
+
+				if(namelen >= DESCRIPTION_TEXT_START)
+				{
+					printf("\n");
+					namelen = 0;
+				}
+
+				for(uint32_t l = 0; l < DESCRIPTION_TEXT_START - namelen; l++)
+				{
+					printf(" ");
+				}
+
+				std::string str = falco::utils::wrap_text(desc, namelen, DESCRIPTION_TEXT_START, CONSOLE_LINE_LEN);
+				printf("%s\n", str.c_str());
+			}
 		}
 	}
 }
