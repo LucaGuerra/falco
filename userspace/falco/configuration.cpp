@@ -256,10 +256,6 @@ void falco_configuration::init(string conf_filename, const vector<string> &cmdli
 	m_syscall_evt_simulate_drops = m_config->get_scalar<bool>("syscall_event_drops.simulate_drops", false);
 
 	m_syscall_evt_timeout_max_consecutives = m_config->get_scalar<uint32_t>("syscall_event_timeouts.max_consecutives", 1000);
-	if(m_syscall_evt_timeout_max_consecutives == 0)
-	{
-		throw logic_error("Error reading config file(" + m_config_file + "): the maximum consecutive timeouts without an event must be an unsigned integer > 0");
-	}
 
 	m_metadata_download_max_mb = m_config->get_scalar<uint32_t>("metadata_download.max_mb", 100);
 	if(m_metadata_download_max_mb > 1024)
