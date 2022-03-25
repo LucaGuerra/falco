@@ -54,9 +54,10 @@ application::run_result application::open_inspector()
 			{
 				m_state->inspector->open_udig();
 			}
-			else if(m_options.gvisor)
+			else if(m_options.gvisor_socket != "")
 			{
-				m_state->inspector->open_gvisor();
+				falco_logger::log(LOG_INFO, "Enabled event collection from gVisor. Socket path: " + app.options().gvisor_socket);
+				m_state->inspector->open_gvisor(app.options().gvisor_socket);
 			}
 			else
 			{

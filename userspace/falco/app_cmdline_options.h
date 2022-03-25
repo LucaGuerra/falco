@@ -42,7 +42,7 @@ public:
 	bool disable_cri_async;
 	std::vector<std::string> disable_sources;
 	std::vector<std::string> disabled_rule_substrings;
-	bool gvisor;
+	std::string gvisor_socket;
 	std::string trace_filename;
 	std::string k8s_api;
 	std::string k8s_api_cert;
