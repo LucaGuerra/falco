@@ -1222,3 +1222,23 @@ TEST_F(test_falco_engine, exceptions_fields_transformer_space_quoted) {
 	EXPECT_EQ(get_compiled_rule_condition("test_rule"),
 	          "(evt.type = open and not tolower(proc.name) = test)");
 }
+
+TEST_F(test_falco_engine, json_warning_item_name) {
+	std::string rules_content = R"END(
+- rule: legit_rule
+  desc: legit rule description
+  condition: evt.type=open
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+
+- something_that_is_not_recognized: hello
+  another_weird_property: ahoy
+
+- 
+
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "legit_rules.yaml")) << m_load_result_string;
+  
+  EXPECT_EQ(m_load_result_json["warnings"][0]["context"]["locations"][1]["item_name"].template get<std::string>(), "something_that_is_not_recognized");
+}

@@ -841,7 +841,11 @@ void rule_loader::reader::read_item(rule_loader::configuration& cfg,
 			}
 		}
 	} else {
-		rule_loader::context ctx(item, rule_loader::context::RULES_CONTENT_ITEM, "", parent);
+		std::string item_name;
+		if(item.IsMap() && item.size() > 0) {
+			item_name = item.begin()->first.as<std::string>();
+		}
+		rule_loader::context ctx(item, rule_loader::context::RULES_CONTENT_ITEM, item_name, parent);
 		cfg.res->add_warning(falco::load_result::LOAD_UNKNOWN_ITEM, "Unknown top level item", ctx);
 	}
 }
